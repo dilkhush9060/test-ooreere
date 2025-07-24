@@ -33,7 +33,7 @@ export default function Pricing() {
         <BlurFade
           inView
           delay={0.3}
-          className="mt-20 flex flex-wrap justify-center gap-8"
+          className="mt-20 flex flex-wrap justify-center gap-4 lg:flex-nowrap xl:gap-8"
         >
           {data?.data?.map((items: IPlan) => (
             <PricingCard

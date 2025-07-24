@@ -71,6 +71,7 @@ export default function Checkout() {
         theme: {
           color: "#232424",
         },
+
         modal: {
           ondismiss: () => {
             paymentOpened.current = false;
@@ -85,9 +86,14 @@ export default function Checkout() {
   }, [isSuccess, data, error, isError]);
 
   useEffect(() => {
-    setTimeout(() => {
-      setLoader(false);
-    }, 60000); // to hide the loader after 50 seconds
+    setTimeout(
+      () => {
+        paymentOpened.current = false; // Reset after 10 minutes
+        setLoader(false);
+        // 10 minutes timeout to reset the paymentOpened state
+      },
+      15 * 60 * 1000
+    );
   });
   if (loader) {
     return (
@@ -195,7 +201,7 @@ export default function Checkout() {
           )}
 
           {currentStep === 1 && (
-            <div className="my-10 mt-16 flex flex-wrap items-center justify-center gap-8">
+            <div className="my-10 mt-16 flex flex-wrap items-center justify-center gap-4 lg:flex-nowrap xl:gap-8">
               {PLANS?.data?.map((item: IPlan) => (
                 <PricingCard
                   key={item._id}

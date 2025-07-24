@@ -15,7 +15,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import {ChartColumnBig} from "lucide-react";
+import {ChartColumnBig, IndianRupee} from "lucide-react";
 
 interface RevenueChartProps {
   data: {label: string; value: number}[];
@@ -90,8 +90,9 @@ const RevenueChart: React.FC<RevenueChartProps> = ({data}) => {
                             <span className="text-[0.70rem] uppercase text-muted-foreground">
                               Revenue
                             </span>
-                            <span className="font-bold">
-                              ${payload[0].value}
+                            <span className="font-bol flex items-center gap-1 text-lg">
+                              <IndianRupee size={20} />
+                              {payload[0].value}
                             </span>
                           </div>
                         </div>

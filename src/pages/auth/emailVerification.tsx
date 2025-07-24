@@ -73,7 +73,7 @@ export default function EmailVerification() {
     e.preventDefault();
     const otpValue = otp.join("");
     if (otpValue.length !== 6) {
-      setErrors({otp: "Please enter all 6 digits"});
+      setErrors({otp: "Please enter otp"});
       return;
     }
     mutate({otp: otpValue});

@@ -187,8 +187,9 @@ export default function Myplan() {
     <>
       <div className="object-fit my-2 mb-8 grid h-96 grid-cols-1 gap-4 bg-[url('/mobile-blue.svg')] bg-cover bg-center shadow-lg md:mx-4 md:h-48 md:grid-cols-3 md:bg-[url('/public/Basic-Plan-card.png')]">
         <div className="flex flex-col items-center justify-center gap-2 rounded-xl text-gray-200 md:items-start">
-          <h1 className="text-4xl font-bold">{purchase?.[0]?.plan?.name}</h1>
-          {/* <Button className="bg-white text-black">Download Invoice</Button> */}
+          <h1 className="text-4xl font-bold lg:px-4">
+            {purchase?.[0]?.plan?.name}
+          </h1>
         </div>
         <div className="grid grid-cols-2 items-center justify-center gap-2 rounded-xl p-4">
           {purchase?.[0]?.plan?.features?.map((item: string) => (

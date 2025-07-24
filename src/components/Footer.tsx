@@ -8,6 +8,7 @@ export default function Footer() {
     {
       label: "Home",
       href: "/",
+      onClick: () => window.scrollTo(0, 0),
     },
     {
       label: "About",
@@ -100,7 +101,7 @@ export default function Footer() {
             </div>
             <div className="flex flex-col items-center gap-4 md:items-start">
               {QUICK_LINKS.map((link) => (
-                <Link key={link.label} to={link.href}>
+                <Link key={link.label} to={link.href} onClick={link.onClick}>
                   {link.label}
                 </Link>
               ))}

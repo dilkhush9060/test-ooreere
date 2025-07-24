@@ -3,7 +3,6 @@ import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/Button";
 
 import {ArrowUpDown, IndianRupee} from "lucide-react";
-// import type {Profile} from "@/types/profile";
 import type {Order} from "@/types/order";
 import Avatar from "react-avatar";
 import DownloadInvoice from "../downloadInvoice";
@@ -17,30 +16,8 @@ const formatDate = (dateString: string) => {
 };
 
 export const OrderColumns: ColumnDef<Order>[] = [
-  //   {
-  //     id: "select",
-  //     header: ({table}) => (
-  //       <Checkbox
-  //         checked={
-  //           table.getIsAllPageRowsSelected() ||
-  //           (table.getIsSomePageRowsSelected() && "indeterminate")
-  //         }
-  //         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-  //         aria-label="Select all"
-  //       />
-  //     ),
-  //     cell: ({row}) => (
-  //       <Checkbox
-  //         checked={row.getIsSelected()}
-  //         onCheckedChange={(value) => row.toggleSelected(!!value)}
-  //         aria-label="Select row"
-  //       />
-  //     ),
-  //     enableSorting: false,
-  //     enableHiding: false,
-  //   },
   {
-    accessorKey: "account",
+    accessorKey: "customerName", // Simple string-based accessor
     header: ({column}) => {
       return (
         <Button
@@ -52,6 +29,12 @@ export const OrderColumns: ColumnDef<Order>[] = [
         </Button>
       );
     },
+    // Extract customer name for filtering
+    accessorFn: (row) => {
+      const name = row?.account?.name || "Unknown";
+      console.log("Accessor function called for:", name); // Debug log
+      return name;
+    },
     cell: ({row}) => {
       const profile = row.original;
       return (
@@ -61,23 +44,24 @@ export const OrderColumns: ColumnDef<Order>[] = [
             round={true}
             size="40"
             alt={profile?.account?.name || "Unknown"}
-            // src={profile.picture ? `/images/${profile.picture}` : undefined}
           />
           <div>
             <div className="font-medium">{profile?.account?.name}</div>
-            <div className="text-sm capitalize text-muted-foreground">
-              {profile?.account.email}
+            <div className="text-sm text-muted-foreground">
+              {profile?.account?.email}
             </div>
-            <div className="text-sm capitalize text-muted-foreground">
+            <div className="text-sm text-muted-foreground">
               {profile?.city?.name || "Unknown City"}
             </div>
           </div>
         </div>
       );
     },
+    enableColumnFilter: true,
+    enableGlobalFilter: true,
   },
   {
-    accessorKey: "Plan",
+    accessorKey: "planName",
     header: ({column}) => {
       return (
         <Button
@@ -89,7 +73,7 @@ export const OrderColumns: ColumnDef<Order>[] = [
         </Button>
       );
     },
-
+    accessorFn: (row) => row?.plan?.name || "No Plan",
     cell: ({row}) => {
       const plans = row.original;
       return (
@@ -101,6 +85,7 @@ export const OrderColumns: ColumnDef<Order>[] = [
         </div>
       );
     },
+    enableColumnFilter: true,
   },
   {
     accessorKey: "totalPaidAmount",
@@ -115,13 +100,11 @@ export const OrderColumns: ColumnDef<Order>[] = [
         </Button>
       );
     },
-
     cell: ({row}) => {
       const profile = row.original;
       return (
         <div className="flex flex-col pl-4">
           <div className="flex items-center text-sm font-bold">
-            {" "}
             <IndianRupee size={15} /> {profile?.totalPaidAmount}
           </div>
         </div>
@@ -140,7 +123,6 @@ export const OrderColumns: ColumnDef<Order>[] = [
         </Button>
       );
     },
-
     cell: ({row}) => {
       const profile = row.original;
       return (
@@ -177,8 +159,8 @@ export const OrderColumns: ColumnDef<Order>[] = [
         </div>
       );
     },
+    enableColumnFilter: true,
   },
-
   {
     accessorKey: "createdAt",
     header: ({column}) => {

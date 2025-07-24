@@ -22,7 +22,7 @@ export default function Home() {
   };
 
   return (
-    <div className="">
+    <div className="" id="home">
       {/* Hero Section */}
       <div className="bg-[#FFF7EB]">
         <div className="relative mx-auto max-w-screen-2xl overflow-hidden md:min-h-[674px]">

@@ -2,7 +2,7 @@ import {PageWrapper, SubHeading, Text, Title} from "./Typography";
 
 export default function Policies() {
   return (
-    <PageWrapper className="mb-14 mt-8 text-black">
+    <PageWrapper className="mb-14 mt-8 min-h-[calc(100vh-500px)] text-black">
       <Title>Refund Policy</Title>
       <div className="mt-[6px] text-[#454E58]">
         <SubHeading>General Policy</SubHeading>

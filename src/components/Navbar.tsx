@@ -109,8 +109,8 @@ export default function Navbar() {
   // Fixed: Better logic for determining if Home should be active
   const isHomeActive =
     currentPath === "/" &&
-    (!location.hash || isHomeClicked) &&
-    (!activeSectionId || isHomeClicked);
+    (!activeSectionId || isHomeClicked) &&
+    (!location.hash || isHomeClicked);
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between bg-white px-6 py-4 shadow-sm">
@@ -149,8 +149,10 @@ export default function Navbar() {
               key={link.id}
               className={cn(
                 `text-base font-medium leading-[1.125rem]`,
-                // Fixed: Check if current location matches the hash and home is not clicked
-                location.hash === `#${link.id}` && !isHomeClicked
+                // Check if this section is currently active (either by hash or scroll position)
+                (activeSectionId === link.id ||
+                  location.hash === `#${link.id}`) &&
+                  !isHomeClicked
                   ? "text-primary"
                   : "text-black"
               )}
@@ -196,8 +198,10 @@ export default function Navbar() {
               key={link.id}
               className={cn(
                 `w-max text-base font-medium leading-[1.125rem]`,
-                // Fixed: Check if current location matches the hash and home is not clicked
-                location.hash === `#${link.id}` && !isHomeClicked
+                // Check if this section is currently active (either by hash or scroll position)
+                (activeSectionId === link.id ||
+                  location.hash === `#${link.id}`) &&
+                  !isHomeClicked
                   ? "text-primary"
                   : "text-black"
               )}

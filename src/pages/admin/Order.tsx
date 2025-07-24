@@ -12,6 +12,7 @@ import {useHandler} from "@/store/handlebar";
 import {Api} from "@/utils/axios";
 import {useQuery} from "@tanstack/react-query";
 import {ScrollText} from "lucide-react";
+
 const Order = () => {
   const {onOpen} = useHandler((state) => state);
   const {data, isLoading} = useQuery({
@@ -25,6 +26,8 @@ const Order = () => {
   if (isLoading) {
     return <Loader />;
   }
+
+  console.log("Orders data:", data?.orders);
 
   return (
     <div
@@ -42,7 +45,11 @@ const Order = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTable columns={OrderColumns} data={data?.orders} />
+          <DataTable
+            columns={OrderColumns}
+            data={data?.orders || []}
+            searchColumn="customerName"
+          />
         </CardContent>
       </Card>
     </div>

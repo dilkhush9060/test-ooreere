@@ -77,14 +77,14 @@ export default function Deleteotp() {
     // console.log(otpValue);
     mutate({otp: otpValue});
     if (otpValue.length !== 6) {
-      setErrors({otp: "Please enter all 6 digits"});
+      setErrors({otp: "Please enter otp"});
       return;
     }
   };
 
   return (
     <div>
-      <div className="mx-auto my-10 flex min-h-[100vh] max-w-2xl flex-col items-start justify-center">
+      <div className="mx-auto my-10 flex min-h-[100vh] max-w-2xl flex-col items-start justify-center gap-6">
         <div className="flex flex-col gap-4">
           <h1 className="text-3xl">Delete Account</h1>
           <p>
@@ -95,7 +95,7 @@ export default function Deleteotp() {
         </div>
 
         <div>
-          <h1>OTP has been sent to your email</h1>
+          <h1 className="pb-2">OTP has been sent to your email</h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -129,7 +129,7 @@ export default function Deleteotp() {
               Delete Account
             </button>
           </form>
-          <p>
+          <p className="mt-4">
             After clicking on "Delete Account" button, an OTP will be sent to
             your email
           </p>
