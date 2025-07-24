@@ -1,8 +1,9 @@
 // utils/useSectionObserver.ts
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState, useCallback} from "react";
 
 interface IntersectionObserverOptions extends IntersectionObserverInit {
   threshold?: number | number[];
+  rootMargin?: string;
 }
 
 export function useSectionObserver(
@@ -11,89 +12,165 @@ export function useSectionObserver(
 ) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const sectionsRef = useRef<Map<string, HTMLElement>>(new Map());
+
+  // Memoize the callback to prevent unnecessary observer recreations
+  const handleIntersection = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      // Create a map of currently intersecting sections with their intersection ratios
+      const intersectingSections = new Map<string, number>();
+
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          intersectingSections.set(entry.target.id, entry.intersectionRatio);
+        }
+      });
+
+      // If no sections are intersecting, determine what should be active
+      if (intersectingSections.size === 0) {
+        // Check if we're at the very top of the page
+        if (window.scrollY < 100) {
+          setActiveId(null); // This will allow "Home" to be active in your navbar
+          return;
+        }
+
+        // Find the section that's closest to the top of the viewport
+        let closestSection: string | null = null;
+        let minDistance = Infinity;
+
+        sectionsRef.current.forEach((section, id) => {
+          const rect = section.getBoundingClientRect();
+
+          // Consider sections that are just above the viewport or partially visible
+          if (rect.bottom > 0) {
+            const distance = Math.abs(rect.top);
+            if (distance < minDistance) {
+              minDistance = distance;
+              closestSection = id;
+            }
+          }
+        });
+
+        if (closestSection) {
+          setActiveId(closestSection);
+        }
+        return;
+      }
+
+      // Find the section with the highest intersection ratio
+      let maxRatio = 0;
+      let mostVisibleSection: string | null = null;
+
+      intersectingSections.forEach((ratio, id) => {
+        if (ratio > maxRatio) {
+          maxRatio = ratio;
+          mostVisibleSection = id;
+        }
+      });
+
+      if (mostVisibleSection) {
+        setActiveId(mostVisibleSection);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
-    const sections = sectionIds
-      .map((id) => document.getElementById(id))
-      .filter(Boolean) as HTMLElement[];
+    // Clear previous sections map
+    sectionsRef.current.clear();
 
+    // Find all sections and populate the map
+    const sections: HTMLElement[] = [];
+    sectionIds.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) {
+        sections.push(element);
+        sectionsRef.current.set(id, element);
+      }
+    });
+
+    // If no sections found, set activeId to null and return
     if (sections.length === 0) {
-      // If no sections are found, ensure activeId is null or 'home' depending on your default
       setActiveId(null);
       return;
     }
 
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        let newActiveId: string | null = null;
-        let maxIntersectionRatio = 0;
-        let foundIntersecting = false;
+    // Disconnect previous observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
 
-        entries.forEach((entry) => {
-          // If the entry is intersecting and has a significant intersection ratio
-          // This prevents fleeting highlights when just grazing a section
-          if (
-            entry.isIntersecting &&
-            entry.intersectionRatio > maxIntersectionRatio
-          ) {
-            maxIntersectionRatio = entry.intersectionRatio;
-            newActiveId = entry.target.id;
-            foundIntersecting = true;
-          }
-        });
+    // Create new observer
+    observerRef.current = new IntersectionObserver(handleIntersection, {
+      root: null,
+      // Adjust rootMargin to account for sticky navbar
+      // Use negative top margin to exclude navbar height from intersection calculations
+      rootMargin: options.rootMargin || "-80px 0px -20% 0px",
+      threshold: options.threshold || [0, 0.1, 0.3, 0.5, 0.7, 1.0],
+      ...options,
+    });
 
-        // If no section is significantly intersecting (e.g., between sections or at top)
-        // We need to decide what to highlight.
-        if (!foundIntersecting) {
-          // Check scroll position to determine if we are at the very top of the page
-          // A small tolerance (e.g., 50px) can be used for "at the top"
-          if (window.scrollY < 50) {
-            // If scrolled almost to the very top
-            newActiveId = null; // Signal that no section is active, letting "Home" be default
-          } else {
-            // Fallback: If not at the very top, and no specific section is highly active,
-            // find the one closest to the top of the viewport. This handles transitions.
-            let minDistance = Infinity;
-            sections.forEach((section) => {
-              const rect = section.getBoundingClientRect();
-              // Consider sections that are partially in view or just above the viewport
-              if (rect.bottom > 0) {
-                // Section is not completely above the viewport
-                const distance = Math.abs(rect.top); // Distance from top of viewport
-                if (distance < minDistance) {
-                  minDistance = distance;
-                  newActiveId = section.id;
-                }
-              }
-            });
-          }
-        }
-
-        // Only update state if the active ID has actually changed to prevent unnecessary re-renders
-        if (newActiveId !== activeId) {
-          setActiveId(newActiveId);
-        }
-      },
-      {
-        root: null, // relative to the viewport
-        // Adjust rootMargin: A negative top margin effectively shrinks the viewport from the top.
-        // If your sticky navbar is, for example, 64px tall, setting -64px here
-        // means sections won't be considered fully "visible" until they clear the navbar.
-        // Experiment with this value based on your navbar's actual height.
-        rootMargin: "0px 0px 0px 0px", // Start with '0px', then adjust if navbar covers content
-        threshold: options.threshold || 0.3, // Trigger when 30% of the section is visible
-        ...options,
-      }
-    );
-
+    // Start observing all sections
     sections.forEach((section) => {
       observerRef.current?.observe(section);
     });
 
-    return () => {
-      observerRef.current?.disconnect();
+    // Initial check for the active section
+    const initialCheck = () => {
+      if (window.scrollY < 100) {
+        setActiveId(null);
+      } else {
+        // Find which section should be initially active
+        let initialActiveId: string | null = null;
+        let maxVisibleArea = 0;
+
+        sections.forEach((section) => {
+          const rect = section.getBoundingClientRect();
+          const viewportHeight = window.innerHeight;
+
+          // Calculate visible area of the section
+          const visibleTop = Math.max(0, rect.top);
+          const visibleBottom = Math.min(viewportHeight, rect.bottom);
+          const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+          const visibleArea = visibleHeight * rect.width;
+
+          if (
+            visibleArea > maxVisibleArea &&
+            rect.bottom > 0 &&
+            rect.top < viewportHeight
+          ) {
+            maxVisibleArea = visibleArea;
+            initialActiveId = section.id;
+          }
+        });
+
+        if (initialActiveId) {
+          setActiveId(initialActiveId);
+        }
+      }
     };
-  }, [JSON.stringify(sectionIds), options.threshold, activeId]); // Add activeId to dependencies to prevent stale closure if used in callback
+
+    // Run initial check
+    initialCheck();
+
+    // Add scroll listener for edge cases
+    const handleScroll = () => {
+      if (window.scrollY < 100) {
+        setActiveId(null);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, {passive: true});
+
+    // Cleanup function
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+      window.removeEventListener("scroll", handleScroll);
+      sectionsRef.current.clear();
+    };
+  }, [sectionIds, handleIntersection, options.threshold, options.rootMargin]);
 
   return activeId;
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import {useEffect, useRef, useState} from "react";
 import {Menu} from "../assets/icons";
 import {Close} from "../assets/icons/Close";
@@ -11,106 +13,120 @@ import {useSectionObserver} from "@/utils/useSectionObserver";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isHomeClicked, setIsHomeClicked] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const currentPath = window.location.pathname;
   const navigate = useNavigate();
   const location = useLocation();
-
-  console.log(currentPath);
-  const handleToggle = () => setIsOpen(!isOpen);
-
-  const isLoogedIn = AuthStore((state) => state.auth.status);
-
+  const currentPath = location.pathname;
+  const isLoggedIn = AuthStore((state) => state.auth.status);
   const sidebarRef = useRef(null);
 
   useOutsideClick(sidebarRef, () => {
     setIsOpen(false);
   });
 
+  // Handle body scroll lock when mobile menu is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
     }
-
     return () => {
       document.body.style.overflow = "unset";
     };
   }, [isOpen]);
 
+  // Handle initial scroll to section if hash is present
   useEffect(() => {
-    // Scroll to the section based on the hash in the URL
     const hash = location.hash;
     if (hash) {
-      const section = document.getElementById(hash.replace("#", ""));
-      if (section) {
-        section.scrollIntoView({behavior: "smooth"});
-      }
-      setIsHomeClicked(false); // Reset home clicked state when hash changes
-      setIsInitialLoad(false);
-    } else {
-      // If no hash and it's initial load or navigating back to home, set home as active
-      if (
-        (isInitialLoad && currentPath === "/") ||
-        (!hash && currentPath === "/")
-      ) {
-        setIsHomeClicked(true);
-      }
-      setIsInitialLoad(false);
+      // Small delay to ensure page is loaded
+      setTimeout(() => {
+        const section = document.getElementById(hash.replace("#", ""));
+        if (section) {
+          const navbarHeight = 80;
+          const elementPosition = section.offsetTop - navbarHeight;
+          window.scrollTo({
+            top: elementPosition,
+            behavior: "smooth",
+          });
+        }
+      }, 100);
     }
-  }, [location, isInitialLoad, currentPath]);
+  }, [location.hash]);
 
-  const handleScrollAndNavigate = (id: string) => {
-    setIsHomeClicked(false); // Reset home clicked state when navigating to sections
-    // Always navigate to home page with hash, regardless of current path
-    navigate(`/#${id}`);
+  const scrollToSection = (sectionId: string) => {
+    // Only navigate with hash if we're on the home page
+    if (currentPath === "/") {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        const navbarHeight = 80;
+        const elementPosition = element.offsetTop - navbarHeight;
+        window.scrollTo({
+          top: elementPosition,
+          behavior: "smooth",
+        });
+        // Update URL hash without triggering navigation
+        window.history.replaceState(null, "", `#${sectionId}`);
+      }
+    } else {
+      // Navigate to home page with hash
+      navigate(`/#${sectionId}`);
+    }
     setIsOpen(false);
   };
 
-  // Add a handler for Home link to clear hash and scroll to top
-  const handleHomeClick = () => {
-    setIsHomeClicked(true); // Set home as clicked
-    // Navigate to home page and clear any hash
-    navigate("/", {replace: true});
-    // Scroll to top of the page
-    window.scrollTo({top: 0, behavior: "smooth"});
+  const scrollToTop = () => {
+    if (currentPath === "/") {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+      // Clear hash from URL
+      window.history.replaceState(null, "", "/");
+    } else {
+      navigate("/");
+    }
     setIsOpen(false);
   };
+
+  const handleToggle = () => setIsOpen(!isOpen);
 
   const navLinks = [
     {
       label: "About",
       id: "about",
-      onClick: () => handleScrollAndNavigate("about"),
+      onClick: () => scrollToSection("about"),
     },
     {
       label: "Services",
       id: "services",
-      onClick: () => handleScrollAndNavigate("services"),
+      onClick: () => scrollToSection("services"),
     },
     {
       label: "Pricing",
       id: "pricing",
-      onClick: () => handleScrollAndNavigate("pricing"),
+      onClick: () => scrollToSection("pricing"),
     },
     {
       label: "Contact",
       id: "contact",
-      onClick: () => handleScrollAndNavigate("contact"),
+      onClick: () => scrollToSection("contact"),
     },
   ];
 
-  // Use the custom hook to get the active section ID
+  // Use the section observer only on the home page
   const sectionIds = navLinks.map((link) => link.id);
-  const activeSectionId = useSectionObserver(sectionIds, {threshold: 0.5});
+  const observedSectionId = useSectionObserver(sectionIds, {threshold: 0.5});
+  const activeSectionId = currentPath === "/" ? observedSectionId : null;
 
-  // Fixed: Better logic for determining if Home should be active
-  const isHomeActive =
-    currentPath === "/" &&
-    (!activeSectionId || isHomeClicked) &&
-    (!location.hash || isHomeClicked);
+  // Home is active when on home page and no section is active (at top of page)
+  const isHomeActive = currentPath === "/" && !activeSectionId;
+
+  // Helper function to determine if a nav link should be active
+  const isNavLinkActive = (linkId: string) => {
+    if (currentPath !== "/") return false;
+    return activeSectionId === linkId || location.hash === `#${linkId}`;
+  };
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between bg-white px-6 py-4 shadow-sm">
@@ -122,8 +138,8 @@ export default function Navbar() {
           {isOpen ? <Close /> : <Menu />}
         </button>
         <Link
-          to={"/"}
-          onClick={handleHomeClick}
+          to="/"
+          onClick={scrollToTop}
           className="text-xl font-semibold leading-7"
         >
           OOR<span className="text-primary">OOR</span>EE
@@ -134,27 +150,21 @@ export default function Navbar() {
       <div className="hidden lg:block">
         <div className="flex items-center gap-11">
           <button
-            onClick={handleHomeClick}
+            onClick={scrollToTop}
             className={cn(
-              `text-base font-medium leading-[1.125rem]`,
+              "text-base font-medium leading-[1.125rem]",
               isHomeActive ? "text-primary" : "text-black"
             )}
           >
             Home
           </button>
-
           {navLinks.map((link) => (
             <button
               onClick={link.onClick}
               key={link.id}
               className={cn(
-                `text-base font-medium leading-[1.125rem]`,
-                // Check if this section is currently active (either by hash or scroll position)
-                (activeSectionId === link.id ||
-                  location.hash === `#${link.id}`) &&
-                  !isHomeClicked
-                  ? "text-primary"
-                  : "text-black"
+                "text-base font-medium leading-[1.125rem]",
+                isNavLinkActive(link.id) ? "text-primary" : "text-black"
               )}
             >
               {link.label}
@@ -163,30 +173,39 @@ export default function Navbar() {
         </div>
       </div>
 
-      {isLoogedIn ? (
+      {/* Auth section */}
+      {isLoggedIn ? (
         <LoggedUser />
       ) : (
         <div className="flex items-center gap-8">
           <Link
-            to={"/signin"}
-            className={`text-base font-medium leading-[1.125rem] ${currentPath === "/signin" ? "text-primary" : "text-black"}`}
+            to="/signin"
+            className={cn(
+              "text-base font-medium leading-[1.125rem]",
+              currentPath === "/signin" ? "text-primary" : "text-black"
+            )}
           >
             Sign in
           </Link>
-          <Link to={"/register"} className="hidden sm:block">
+          <Link to="/register" className="hidden sm:block">
             <Button>Create free account</Button>
           </Link>
         </div>
       )}
+
+      {/* Mobile menu */}
       <div
         ref={sidebarRef}
-        className={`fixed bottom-0 left-0 top-0 z-30 w-[280px] bg-white px-12 pt-24 duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={cn(
+          "fixed bottom-0 left-0 top-0 z-30 w-[280px] bg-white px-12 pt-24 duration-300 ease-in-out",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
       >
         <div className="flex flex-col gap-[53px] text-start">
           <button
-            onClick={handleHomeClick}
+            onClick={scrollToTop}
             className={cn(
-              `w-max text-base font-medium leading-[1.125rem]`,
+              "w-max text-base font-medium leading-[1.125rem]",
               isHomeActive ? "text-primary" : "text-black"
             )}
           >
@@ -197,34 +216,33 @@ export default function Navbar() {
               onClick={link.onClick}
               key={link.id}
               className={cn(
-                `w-max text-base font-medium leading-[1.125rem]`,
-                // Check if this section is currently active (either by hash or scroll position)
-                (activeSectionId === link.id ||
-                  location.hash === `#${link.id}`) &&
-                  !isHomeClicked
-                  ? "text-primary"
-                  : "text-black"
+                "w-max text-base font-medium leading-[1.125rem]",
+                isNavLinkActive(link.id) ? "text-primary" : "text-black"
               )}
             >
               {link.label}
             </button>
           ))}
-
-          {!isLoogedIn && (
+          {!isLoggedIn && (
             <>
               <Link
-                to={"/signin"}
-                className={`text-base font-medium leading-[1.125rem] ${currentPath === "/signin" ? "text-primary" : "text-black"}`}
+                to="/signin"
+                className={cn(
+                  "text-base font-medium leading-[1.125rem]",
+                  currentPath === "/signin" ? "text-primary" : "text-black"
+                )}
               >
                 Sign in
               </Link>
-              <Link to={"/register"}>
+              <Link to="/register">
                 <Button>Create free account</Button>
               </Link>
             </>
           )}
         </div>
       </div>
+
+      {/* Mobile menu overlay */}
       <div
         className={cn(
           "fixed inset-0 z-10 -translate-x-full bg-black/30 opacity-0 transition-opacity duration-500 ease-out lg:hidden",

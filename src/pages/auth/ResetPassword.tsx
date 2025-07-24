@@ -198,6 +198,7 @@ export default function ResetPassword(): JSX.Element {
             className="mt-2 w-full space-y-6 px-4 md:max-w-[400px]"
           >
             <div>
+              <p className="px-4 py-2">Enter otp here</p>
               <div className="flex items-center justify-around gap-1">
                 {Array(6)
                   .fill(null)
