@@ -1,0 +1,17 @@
+export const PAGE_LINKS = {
+  HOME: "/",
+  LOGIN: "/signin",
+  SIGNUP: "/register",
+  FORGOT_PASSWORD: "/forgot-password",
+  RESET_PASSWORD: "/reset-password",
+  EMAIL_VERIFICATION: "/email-verify",
+  CHECKOUT: "/checkout",
+  PROFILE: "/profile",
+  CHANGE_PASSWORD: "/change-password",
+  MY_PURCHASE: "/my-purchase",
+  TERMS_OF_USE: "/terms-of-use",
+  TERMS_AND_SERVICES: "/terms-and-services",
+  REFUND_POLICY: "/refund-policy",
+  PRIVACY_POLICY: "/privacy-policy",
+  PAYMENT_SUCCESS: "/payment-status",
+};

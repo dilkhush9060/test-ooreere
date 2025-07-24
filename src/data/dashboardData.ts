@@ -1,0 +1,50 @@
+export const dashboardData = {
+  revenueChart: [
+    {label: "Jun 2024", value: 110},
+    {label: "Jul 2024", value: 122},
+    {label: "Aug 2024", value: 44},
+    {label: "Sept 2024", value: 110},
+    {label: "Oct 2024", value: 12},
+    {label: "Nov 2024", value: 45},
+    {label: "Dec 2024", value: 454},
+    {label: "Jan 2025", value: 1441},
+    {label: "Feb 2025", value: 474},
+    {label: "Mar 2025", value: 441},
+    {label: "Apr 2025", value: 545},
+    {label: "May 2025", value: 41},
+  ],
+  subscriptionTrend: [
+    {label: "Jun 2024", value: 451},
+    {label: "Jul 2024", value: 441},
+    {label: "Aug 2024", value: 445},
+    {label: "Sept 2024", value: 441},
+    {label: "Oct 2024", value: 145},
+    {label: "Nov 2024", value: 120},
+    {label: "Dec 2024", value: 484},
+    {label: "Jan 2025", value: 124},
+    {label: "Feb 2025", value: 124},
+    {label: "Mar 2025", value: 121},
+    {label: "Apr 2025", value: 545},
+    {label: "May 2025", value: 758},
+  ],
+  planPopularity: [],
+  revenue: {
+    monthly: 50,
+    yearly: 500,
+    total: 1000,
+  },
+  subscriptions: {
+    total: 120,
+    active: 45,
+    expired: 95,
+    renewed: 100,
+  },
+  topPlans: [
+    {
+      name: "pro",
+      subscribers: 500,
+      revenue: 12000,
+      growth: 15545
+    },
+  ],
+};
